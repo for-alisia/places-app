@@ -13,6 +13,7 @@
     padding: 1rem;
     color: white;
     background: #292929;
+    transition: all 0.2s ease-out;
 }
 
 .user-item a:hover,
