@@ -1,6 +1,6 @@
 .user-item {
     margin: 1rem;
-    width: calc(45% - 2rem);
+    width: calc(30% - 2rem);
     min-width: 17.5rem;
 }
 
@@ -18,7 +18,7 @@
 
 .user-item a:hover,
 .user-item a:active {
-    background: #ffd900;
+    background: #ff7b00;
 }
 
 .card.user-item__content {
@@ -35,16 +35,17 @@
     font-size: 1.5rem;
     margin: 0 0 0.5rem 0;
     font-weight: normal;
-    color: #ffd900;
+    color: #ff7b00;
 }
 
 .user-item:hover h2,
 .user-item:active h2,
 .user-item:hover h3,
 .user-item:active h3 {
-    color: #292929;
+    color: #fff;
 }
 
 .user-item__info h3 {
     margin: 0;
+    font-weight: 400;
 }
