@@ -29,7 +29,7 @@ export const DUMMY_PLACES = [
             lat: 40.7476936,
             lng: -73.9691017,
         },
-        creator: 'u2',
+        creator: 'u1',
     },
 ];
 const UserPlaces = (props) => {

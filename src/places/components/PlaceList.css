@@ -3,5 +3,13 @@
     margin: 1rem auto;
     padding: 0;
     width: 90%;
-    max-width: 40rem;
+}
+
+@media (min-width: 768px) {
+    .place-list {
+        display: flex;
+        justify-content: center;
+        align-items: stretch;
+        flex-wrap: wrap;
+    }
 }
