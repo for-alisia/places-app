@@ -9,6 +9,7 @@ import {
     VALIDATOR_REQUIRE,
 } from '../../shared/util/validators';
 import { useForm } from '../../shared/hooks/form-hook';
+import { useHttpClient } from '../../shared/hooks/http-hook';
 import { AuthContext } from '../../shared/context/auth-context';
 import './Auth.css';
 import ErrorModal from '../../shared/components/UIElements/ErrorModal';
@@ -17,10 +18,12 @@ import LoadingSpinner from '../../shared/components/UIElements/LoadingSpinner';
 const Auth = (props) => {
     //Demands what fields in the form should be rendered (Sign in or Sign up)
     const [isLoginMode, setIsLoginMode] = useState(true);
-    //Demands to show a spinner
-    const [isLoading, setIsLoading] = useState(false);
-    //Demands if the error occures due the connection to the server and shows an error modal
-    const [error, setError] = useState();
+
+    //Use a custom hook to send and handle the request to a server
+    const { isLoading, error, sendRequest, clearError } = useHttpClient();
+
+    const auth = useContext(AuthContext);
+
     //Custom hook to manage state and validity of the form
     const [formState, inputHandler, setFormData] = useForm(
         {
@@ -36,85 +39,7 @@ const Auth = (props) => {
         false
     );
 
-    const auth = useContext(AuthContext);
-    // Handle Submit a form (enable only if form is valid (in other cases submit button is disabled))
-    const authSubmitHandler = async (event) => {
-        event.preventDefault();
-        //Initial loading data
-        setIsLoading(true);
-        if (isLoginMode) {
-            //Login Mode
-            try {
-                //Send a request to the server
-                const response = await fetch(
-                    'http://localhost:5000/api/users/login',
-                    {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({
-                            email: formState.inputs.email.value,
-                            password: formState.inputs.password.value,
-                        }),
-                    }
-                );
-
-                const responseData = await response.json();
-                //If response status is not 200 (404, 500 etc), throw an Error
-                if (!response.ok) {
-                    throw new Error(responseData.message);
-                }
-
-                setIsLoading(false);
-                //We can login user
-                auth.login();
-            } catch (err) {
-                console.log(err);
-                setIsLoading(false);
-                setError(
-                    err.message || 'Something went wrong, please try again'
-                );
-            }
-        } else {
-            //SignUp Mode
-            try {
-                //Send a request to the server
-                const response = await fetch(
-                    'http://localhost:5000/api/users/signup',
-                    {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({
-                            name: formState.inputs.name.value,
-                            email: formState.inputs.email.value,
-                            password: formState.inputs.password.value,
-                        }),
-                    }
-                );
-
-                const responseData = await response.json();
-                //If response status is not 200 (404, 500 etc), throw an Error
-                if (!response.ok) {
-                    throw new Error(responseData.message);
-                }
-                setIsLoading(false);
-                //We can login user
-                auth.login();
-            } catch (err) {
-                console.log(err);
-                //Loading is finished
-                setIsLoading(false);
-                //Set error to state
-                setError(
-                    err.message || 'Something went wrong, please try again'
-                );
-            }
-        }
-    };
-
+    //Handle the forms (sign in or sign up)
     const switchModeHandler = () => {
         if (!isLoginMode) {
             setFormData(
@@ -140,14 +65,52 @@ const Auth = (props) => {
         setIsLoginMode((prevMode) => !prevMode);
     };
 
-    //Occured,when user close Error Modal, reset error state to null
-    const errorHandler = () => {
-        setError(null);
+    // Handle Submit a form (enable only if form is valid (in other cases submit button is disabled))
+    const authSubmitHandler = async (event) => {
+        event.preventDefault();
+        if (isLoginMode) {
+            //Login Mode
+            try {
+                //Use custom hook function to send a request. It will return responce data (promise) and handle the errors
+                const responseData = await sendRequest(
+                    'http://localhost:5000/api/users/login',
+                    'POST',
+                    JSON.stringify({
+                        email: formState.inputs.email.value,
+                        password: formState.inputs.password.value,
+                    }),
+                    { 'Content-Type': 'application/json' }
+                );
+                //We can login user
+                auth.login();
+            } catch (err) {
+                console.log(err);
+            }
+        } else {
+            //SignUp Mode
+            try {
+                //Send a request to the server
+                await sendRequest(
+                    'http://localhost:5000/api/users/signup',
+                    'POST',
+                    JSON.stringify({
+                        name: formState.inputs.name.value,
+                        email: formState.inputs.email.value,
+                        password: formState.inputs.password.value,
+                    }),
+                    { 'Content-Type': 'application/json' }
+                );
+                //We can login user
+                auth.login();
+            } catch (err) {
+                console.log(err);
+            }
+        }
     };
 
     return (
         <React.Fragment>
-            <ErrorModal error={error} onClear={errorHandler} />
+            <ErrorModal error={error} onClear={clearError} />
             <Card className='authentication'>
                 {isLoading && <LoadingSpinner asOverlay />}
                 <h2>{isLoginMode ? 'Sign in' : 'Sign up'}</h2>

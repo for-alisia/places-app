@@ -1,33 +1,59 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 
 import UsersList from '../components/UsersList';
+import ErrorModal from '../../shared/components/UIElements/ErrorModal';
+import LoadingSpinner from '../../shared/components/UIElements/LoadingSpinner';
 
 const Users = () => {
-    const USERS = [
-        {
-            id: 'u1',
-            name: 'Lina',
-            image:
-                'https://images.unsplash.com/photo-1588887563897-7809995fe9b7?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=802&q=80',
-            places: 3,
-        },
-        {
-            id: 'u2',
-            name: 'Jason',
-            image:
-                'https://images.unsplash.com/photo-1584202532967-6390de14ecac?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=693&q=80',
-            places: 5,
-        },
-        {
-            id: 'u3',
-            name: 'Sandy',
-            image:
-                'https://images.unsplash.com/photo-1489701714346-794d8674a788?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=634&q=80',
-            places: 8,
-        },
-    ];
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState();
+    const [loadedUsers, setLoadedUsers] = useState();
 
-    return <UsersList items={USERS} />;
+    //UseEffect prevents the infinite loop of re-rendering (request for data => render => changes (async finction, data comes) => sent request for data again)
+    //Second argument - empty array => function runs once, when Component did mount
+    useEffect(() => {
+        //We can't use async func as the first argument of useEffect, but we can use async inside this func
+        const sendRequest = async () => {
+            setIsLoading(true);
+            //Send a request
+            try {
+                const response = await fetch('http://localhost:5000/api/users');
+                const responseData = await response.json();
+
+                //Handle 4-- and 5-- errors
+                if (!response.ok) {
+                    throw new Error(responseData.message);
+                }
+
+                //Add users from server to the state
+                setLoadedUsers(responseData.users);
+            } catch (err) {
+                setError(err.message);
+            }
+            setIsLoading(false);
+        };
+        sendRequest();
+    }, []);
+
+    //Handle closing of error modal
+    const errorHandler = () => {
+        setError(null);
+    };
+
+    return (
+        <React.Fragment>
+            <ErrorModal error={error} onClear={errorHandler} />
+            {isLoading && (
+                <div className='center'>
+                    <LoadingSpinner asOverlay />
+                </div>
+            )}
+            {
+                //We don't need to render UsersList, while loadedUsers = undefined
+                !isLoading && loadedUsers && <UsersList items={loadedUsers} />
+            }
+        </React.Fragment>
+    );
 };
 
 export default Users;
