@@ -14,6 +14,7 @@ import { AuthContext } from '../../shared/context/auth-context';
 import './Auth.css';
 import ErrorModal from '../../shared/components/UIElements/ErrorModal';
 import LoadingSpinner from '../../shared/components/UIElements/LoadingSpinner';
+import ImageUpload from '../../shared/components/FormElements/ImageUpload';
 
 const Auth = (props) => {
   //Demands what fields in the form should be rendered (Sign in or Sign up)
@@ -46,6 +47,7 @@ const Auth = (props) => {
         {
           ...formState.inputs,
           name: undefined,
+          image: undefined,
         },
         formState.inputs.email.isValid && formState.inputs.password.isValid
       );
@@ -55,6 +57,10 @@ const Auth = (props) => {
           ...formState.inputs,
           name: {
             value: '',
+            isValid: false,
+          },
+          image: {
+            value: null,
             isValid: false,
           },
         },
@@ -67,6 +73,7 @@ const Auth = (props) => {
   // Handle Submit a form (enable only if form is valid (in other cases submit button is disabled))
   const authSubmitHandler = async (event) => {
     event.preventDefault();
+    console.log(formState);
     if (isLoginMode) {
       //Login Mode
       try {
@@ -125,6 +132,9 @@ const Auth = (props) => {
               validators={[VALIDATOR_REQUIRE()]}
               onInput={inputHandler}
             />
+          )}
+          {!isLoginMode && (
+            <ImageUpload center id='image' onInput={inputHandler} />
           )}
           <Input
             id='email'
